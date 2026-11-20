@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:io' show Platform;
 import 'dart:async' show StreamSubscription;
 
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -42,6 +43,7 @@ abstract final class PiliScheme {
   static final _prefixRegex = RegExp(r'^\S+://');
 
   static void init() {
+    if (Platform.isOhos) return;
     // Register our protocol only on Windows platform
     // registerProtocolHandler('bilibili');
     appLinks = AppLinks();

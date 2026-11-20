@@ -42,6 +42,7 @@ import 'package:PiliPlus/plugin/pl_player/models/double_tap_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/gesture_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
+import 'package:PiliPlus/plugin/pl_player/ohos_video.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/backward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/bottom_control.dart';
@@ -122,7 +123,7 @@ class PLVideoPlayer extends StatefulWidget {
 class _PLVideoPlayerState extends State<PLVideoPlayer>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late AnimationController _animationController;
-  late VideoController videoController;
+  VideoController? videoController;
   late final CommonIntroController introController = widget.introController!;
   PgcIntroController get pgcController => introController as PgcIntroController;
   UgcIntroController get ugcController => introController as UgcIntroController;
@@ -264,7 +265,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    videoController = plPlayerController.videoController!;
+    if (!Platform.isOhos) {
+      videoController = plPlayerController.videoController!;
+    }
 
     if (PlatformUtils.isMobile) {
       Future.microtask(() {
@@ -339,7 +342,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     if (!plPlayerController.continuePlayInBackground.value) {
       if (const <AppLifecycleState>[.paused, .detached].contains(state)) {
         final player = plPlayerController.videoPlayerController;
-        if (player != null && player.state.playing) {
+        if (Platform.isOhos
+            ? plPlayerController.ohosVideoPlayerController?.value.isPlaying ==
+                true
+            : player != null && player.state.playing) {
           _pauseDueToPauseUponEnteringBackgroundMode = true;
           plPlayerController.pause();
         }
@@ -1341,13 +1347,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         if (widget.danmuWidget case final danmaku?)
           Positioned.fill(top: 4, child: danmaku),
 
-        if (!isLive)
+        if (!isLive && !Platform.isOhos)
           Positioned.fill(
             child: IgnorePointer(
               ignoring: !plPlayerController.enableDragSubtitle,
               child: Obx(
                 () => SubtitleView(
-                  controller: videoController,
+                  controller: videoController!,
                   configuration: plPlayerController.subtitleConfig.value,
                   enableDragSubtitle: plPlayerController.enableDragSubtitle,
                   onUpdatePadding: plPlayerController.onUpdatePadding,
@@ -2024,18 +2030,29 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             child: Obx(
               () {
                 final videoFit = plPlayerController.videoFit.value;
+                final ohosController =
+                    plPlayerController.ohosVideoPlayerController;
                 return Transform.flip(
                   flipX: plPlayerController.flipX.value,
                   flipY: plPlayerController.flipY.value,
-                  child: FittedBox(
-                    fit: videoFit.boxFit,
-                    alignment: widget.alignment,
-                    child: SimpleVideo(
-                      controller: plPlayerController.videoController!,
-                      fill: widget.fill,
-                      aspectRatio: videoFit.aspectRatio,
-                    ),
-                  ),
+                  child: Platform.isOhos
+                      ? ohosController == null
+                            ? ColoredBox(color: widget.fill)
+                            : OhosVideoSurface(
+                                controller: ohosController,
+                                fit: videoFit.boxFit,
+                                fill: widget.fill,
+                                alignment: widget.alignment,
+                              )
+                      : FittedBox(
+                          fit: videoFit.boxFit,
+                          alignment: widget.alignment,
+                          child: SimpleVideo(
+                            controller: plPlayerController.videoController!,
+                            fill: widget.fill,
+                            aspectRatio: videoFit.aspectRatio,
+                          ),
+                        ),
                 );
               },
             ),

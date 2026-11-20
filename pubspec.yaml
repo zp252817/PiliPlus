@@ -21,7 +21,7 @@ version: 2.2.1+1
 
 environment:
   sdk: ">=3.13.0"
-  flutter: 3.47.9
+  flutter: ">=3.47.9-0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -137,6 +137,8 @@ dependencies:
   media_kit: 1.1.11
   media_kit_libs_video: 1.0.5
   media_kit_video: 1.2.5
+  video_player: ^2.14.1
+  video_player_ohos: ^1.0.0
   mime: ^2.0.0
   nativeapi: ^0.5.2
   native_device_orientation:

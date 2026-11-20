@@ -84,16 +84,28 @@ Future<void> _initDownPath() async {
 }
 
 Future<void> _initTmpPath() async {
+  if (Platform.isOhos) {
+    tmpDirPath = '/data/storage/el2/base/cache';
+    await Directory(tmpDirPath).create(recursive: true);
+    return;
+  }
   tmpDirPath = (await getTemporaryDirectory()).path;
 }
 
 Future<void> _initAppPath() async {
+  if (Platform.isOhos) {
+    appSupportDirPath = '/data/storage/el2/base/files';
+    await Directory(appSupportDirPath).create(recursive: true);
+    return;
+  }
   appSupportDirPath = (await getApplicationSupportDirectory()).path;
 }
 
 void main() async {
   ScaledWidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
+  if (!Platform.isOhos) {
+    MediaKit.ensureInitialized();
+  }
   await _initAppPath();
   try {
     await GStorage.init();
@@ -117,8 +129,11 @@ void main() async {
   if (PlatformUtils.isMobile) {
     if (Platform.isAndroid) MaxScreenSize.init();
     await Future.wait([
-      if (Pref.horizontalScreen) ?fullMode() else ?portraitUpMode(),
-      setupServiceLocator(),
+      if (Platform.isOhos || Pref.horizontalScreen)
+        ?fullMode()
+      else
+        ?portraitUpMode(),
+      if (Platform.isAndroid || Platform.isIOS) setupServiceLocator(),
       if (Platform.isIOS) IOSPipHelper.init(),
     ]);
   } else if (Platform.isWindows) {
@@ -164,7 +179,7 @@ void main() async {
         }
         FlutterDisplayMode.setPreferredMode(displayMode ?? DisplayMode.auto);
       });
-    } else {
+    } else if (Platform.isIOS) {
       ScreenBrightnessPlatform.instance.setAutoReset(false);
     }
   }
@@ -173,7 +188,7 @@ void main() async {
     await MyApp.initPlatformState();
   }
 
-  if (Pref.enableLog) {
+  if (Pref.enableLog && !Platform.isOhos) {
     // 异常捕获 logo记录
     final customParameters = {
       'Build Time': DateFormatUtils.format(

@@ -952,6 +952,7 @@ class RichTextField extends StatefulWidget {
           editableTextState: editableTextState,
         );
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
@@ -1524,6 +1525,7 @@ class RichTextFieldState extends State<RichTextField>
       case TargetPlatform.windows:
       case TargetPlatform.fuchsia:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
         if (cause == SelectionChangedCause.longPress) {
           _editableText?.bringIntoView(selection.extent);
         }
@@ -1533,6 +1535,7 @@ class RichTextFieldState extends State<RichTextField>
       case TargetPlatform.iOS:
       case TargetPlatform.fuchsia:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
         break;
       case TargetPlatform.macOS:
       case TargetPlatform.linux:
@@ -1676,6 +1679,7 @@ class RichTextFieldState extends State<RichTextField>
               widget.spellCheckConfiguration,
             );
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
@@ -1749,6 +1753,7 @@ class RichTextFieldState extends State<RichTextField>
         };
 
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
         forcePressEnabled = false;
         textSelectionControls ??= materialTextSelectionHandleControls;

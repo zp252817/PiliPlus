@@ -927,11 +927,16 @@ class VideoDetailController extends GetxController
           displayTime: const Duration(seconds: 3),
         );
       }
+      if (Platform.isOhos && data.durl?.isNotEmpty == true) {
+        data.dash = null;
+      }
       final dash = data.dash;
       if (dash == null) {
         if (data.durl case final durl?) {
           // it will cause all files to be opened simultaneously
-          if (durl.length > 1) {
+          if (durl.length > 1 && Platform.isOhos) {
+            videoUrl = VideoUtils.getCdnUrl(durl.first.playUrls);
+          } else if (durl.length > 1) {
             // TODO: refa
             final sb = StringBuffer('edl://!no_chapters;');
             for (var i in durl) {

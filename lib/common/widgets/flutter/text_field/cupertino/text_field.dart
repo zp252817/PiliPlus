@@ -1157,6 +1157,7 @@ class CupertinoRichTextField extends StatefulWidget {
             ) {
               switch (defaultTargetPlatform) {
                 case TargetPlatform.android:
+                case TargetPlatform.ohos:
                 case TargetPlatform.iOS:
                   return CupertinoTextMagnifier(
                     controller: controller,
@@ -1321,6 +1322,7 @@ class _CupertinoRichTextFieldState extends State<CupertinoRichTextField>
       case TargetPlatform.windows:
       case TargetPlatform.fuchsia:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
         if (cause == SelectionChangedCause.longPress) {
           _editableText.bringIntoView(selection.extent);
         }
@@ -1330,6 +1332,7 @@ class _CupertinoRichTextFieldState extends State<CupertinoRichTextField>
       case TargetPlatform.iOS:
       case TargetPlatform.fuchsia:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
         break;
       case TargetPlatform.macOS:
       case TargetPlatform.linux:
@@ -1549,6 +1552,7 @@ class _CupertinoRichTextFieldState extends State<CupertinoRichTextField>
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
         textSelectionControls ??= cupertinoTextSelectionHandleControls;
       case TargetPlatform.linux:

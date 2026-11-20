@@ -1,6 +1,6 @@
 import 'dart:async' show StreamSubscription, Timer;
 import 'dart:convert' show ascii, utf8;
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 import 'dart:math' show max, min;
 import 'dart:ui' as ui;
 
@@ -68,6 +68,7 @@ import 'package:nativeapi/nativeapi.dart' as nativeapi show Size, Rectangle;
 import 'package:path/path.dart' as path;
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:video_player/video_player.dart';
 import 'package:window_manager/window_manager.dart';
 
 typedef PlayCallback = Future<void>? Function();
@@ -76,6 +77,7 @@ typedef PlayOwner = ({String tag, Type? type});
 class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
+  VideoPlayerController? _ohosVideoPlayerController;
 
   static PlPlayerController? _instance;
 
@@ -92,8 +94,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   int get progress =>
       isSeeking.value && hoverDx == null ? seekPosition.value : position.value;
 
-  int get positionInMilliseconds =>
-      videoPlayerController?.state.position.inMilliseconds ?? 0;
+  int get positionInMilliseconds => Platform.isOhos
+      ? (_ohosVideoPlayerController?.value.position.inMilliseconds ?? 0)
+      : (videoPlayerController?.state.position.inMilliseconds ?? 0);
 
   final RxInt buffered = RxInt(0);
 
@@ -174,6 +177,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// [videoController] instance of Player
   VideoController? get videoController => _videoController;
+
+  VideoPlayerController? get ohosVideoPlayerController =>
+      _ohosVideoPlayerController;
+
+  bool get hasVideoController => Platform.isOhos
+      ? _ohosVideoPlayerController?.value.isInitialized == true
+      : _videoController != null;
+
+  Duration get _ohosVideoPlayerPlayerPosition =>
+      _ohosVideoPlayerController?.value.position ?? Duration.zero;
 
   bool isMuted = false;
 
@@ -629,11 +642,19 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
             triggerFullScreen(status: false, orientation: orientation);
           }
         } else {
-          portraitUpMode();
+          if (Platform.isOhos && !isFullScreen) {
+            fullMode();
+          } else {
+            portraitUpMode();
+          }
         }
       case .portraitDown:
-        if (!horizontalScreen) return;
-        portraitDownMode();
+        if (!horizontalScreen && !Platform.isOhos) return;
+        if (Platform.isOhos && !isFullScreen) {
+          fullMode();
+        } else {
+          portraitDownMode();
+        }
       case .landscapeLeft:
         if (!horizontalScreen && !isFullScreen) {
           triggerFullScreen(orientation: orientation, isManualFS: false);
@@ -747,7 +768,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         _clearPreview();
       }
       cancelLongPressTimer();
-      if (_videoPlayerController != null &&
+      if (Platform.isOhos) {
+        if (_ohosVideoPlayerController?.value.isPlaying == true) {
+          await pause(notify: false);
+        }
+      } else if (_videoPlayerController != null &&
           _videoPlayerController!.state.playing) {
         await pause(notify: false);
       }
@@ -756,7 +781,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         return;
       }
       // 配置Player 音轨、字幕等等
-      await _createVideoController(dataSource, seekTo, volume, rotate);
+      if (Platform.isOhos) {
+        await _createOhosVideoController(dataSource, seekTo, volume);
+      } else {
+        await _createVideoController(dataSource, seekTo, volume, rotate);
+      }
 
       if (_playerCount == 0) {
         _removeListeners();
@@ -766,7 +795,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         return;
       }
 
-      updateDuration(duration ?? _videoPlayerController!.state.duration);
+      final loadedDuration = Platform.isOhos
+          ? _ohosVideoPlayerController!.value.duration
+          : _videoPlayerController!.state.duration;
+      updateDuration(duration ?? loadedDuration);
       position.value = buffered.value = seekTo?.inSeconds ?? 0;
 
       dataStatus.value = .loaded;
@@ -805,6 +837,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   late final Rx<SuperResolutionType> superResolutionType =
       (isAnim ? Pref.superResolutionType : SuperResolutionType.disable).obs;
   Future<void> setShader([SuperResolutionType? type, NativePlayer? pp]) async {
+    if (Platform.isOhos) return;
     if (type == null) {
       type = superResolutionType.value;
     } else {
@@ -957,9 +990,81 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     );
   }
 
+  Future<void> _createOhosVideoController(
+    DataSource dataSource,
+    Duration? seekTo,
+    Volume? volume,
+  ) async {
+    final source = dataSource.videoSource;
+    if (source.startsWith('edl://')) {
+      throw UnsupportedError('HarmonyOS requires a single video stream');
+    }
+
+    _ohosVideoPlayerController?.dispose();
+    final VideoPlayerController controller;
+    if (dataSource is FileSource) {
+      controller = VideoPlayerController.file(File(source));
+    } else {
+      controller = VideoPlayerController.networkUrl(
+        Uri.parse(source),
+        httpHeaders: {
+          'User-Agent': BrowserUa.pc,
+          'Referer': HttpString.baseUrl,
+        },
+      );
+    }
+
+    _ohosVideoPlayerController = controller;
+    controller.addListener(_onOhosVideoValueChanged);
+    await controller.initialize();
+    await controller.setLooping(
+      playRepeat == .singleCycle || playRepeat == .listCycle,
+    );
+    // The OHOS backend applies the device media volume. Loudness metadata is
+    // only available to the mpv backend and is intentionally ignored here.
+    if (seekTo != null && seekTo > Duration.zero) {
+      await controller.seekTo(seekTo);
+    }
+    _onOhosVideoValueChanged();
+  }
+
+  void _onOhosVideoValueChanged() {
+    final value = _ohosVideoPlayerController?.value;
+    if (value == null) return;
+
+    if (value.duration > Duration.zero) {
+      updateDuration(value.duration);
+    }
+    position.value = value.position.inSeconds;
+    buffered.value = value.buffered.isEmpty
+        ? 0
+        : value.buffered.last.end.inSeconds;
+    isBuffering.value = value.isBuffering;
+
+    final status = value.isCompleted
+        ? PlayerStatus.completed
+        : value.isPlaying
+        ? PlayerStatus.playing
+        : PlayerStatus.paused;
+    if (status != playerStatus) {
+      playerStatus = status;
+      for (final listener in _statusListeners) {
+        listener(status);
+      }
+    }
+    for (final listener in _positionListeners) {
+      listener(value.position);
+    }
+  }
+
   Future<void>? refreshPlayer() {
     if (dataSource is FileSource) {
       return null;
+    }
+    if (Platform.isOhos) {
+      final controller = _ohosVideoPlayerController;
+      if (controller == null) return null;
+      return controller.play();
     }
     if (_videoPlayerController case final ctr? when (ctr.current.isNotEmpty)) {
       var media = ctr.current.last;
@@ -973,7 +1078,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   Future<void> _initializePlayer() async {
     if (_instance == null) return;
     // 设置倍速
-    if (_videoPlayerController != null) {
+    if (Platform.isOhos) {
+      if (!isLive &&
+          _ohosVideoPlayerController?.value.playbackSpeed != playbackSpeed) {
+        await setPlaybackSpeed(playbackSpeed);
+      }
+    } else if (_videoPlayerController != null) {
       final speed = isLive ? 1.0 : playbackSpeed;
       if (_videoPlayerController!.state.rate != speed) {
         await setPlaybackSpeed(speed);
@@ -1012,11 +1122,14 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void _updatePlaybackState({Duration? position, String? debugLabel}) {
+    final currentPosition = Platform.isOhos
+        ? (_ohosVideoPlayerController?.value.position ?? Duration.zero)
+        : _videoPlayerController!.state.position;
     videoPlayerServiceHandler?.onUpdateState(
       playerStatus,
       isBuffering.value,
       isLive,
-      position: position ?? _videoPlayerController!.state.position,
+      position: position ?? currentPosition,
       speed: playbackSpeed,
       debugLabel: debugLabel,
     );
@@ -1187,7 +1300,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
     danmakuController?.clear();
     try {
-      await _videoPlayerController?.seek(position);
+      if (Platform.isOhos) {
+        await _ohosVideoPlayerController?.seekTo(position);
+      } else {
+        await _videoPlayerController?.seek(position);
+      }
       _updateIOSPip(position);
     } catch (e) {
       if (kDebugMode) debugPrint('seek failed: $e');
@@ -1198,9 +1315,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   Future<void> setPlaybackSpeed(double speed) async {
     lastPlaybackSpeed = playbackSpeed;
 
-    if (speed == _videoPlayerController?.state.rate) return;
-
-    await _videoPlayerController?.setRate(speed);
+    if (Platform.isOhos) {
+      if (speed == _ohosVideoPlayerController?.value.playbackSpeed) return;
+      await _ohosVideoPlayerController?.setPlaybackSpeed(speed);
+    } else {
+      if (speed == _videoPlayerController?.state.rate) return;
+      await _videoPlayerController?.setRate(speed);
+    }
     if (!isLive) _playbackSpeed.value = speed;
     _updatePlaybackState();
     if (danmakuController != null) {
@@ -1225,7 +1346,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       await seekTo(Duration.zero);
     }
 
-    await _videoPlayerController?.play();
+    if (Platform.isOhos) {
+      await _ohosVideoPlayerController?.play();
+    } else {
+      await _videoPlayerController?.play();
+    }
 
     audioSessionHandler?.setActive(true);
 
@@ -1234,7 +1359,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 暂停播放
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
-    await _videoPlayerController?.pause();
+    if (Platform.isOhos) {
+      await _ohosVideoPlayerController?.pause();
+    } else {
+      await _videoPlayerController?.pause();
+    }
     playerStatus = .paused;
 
     // 主动暂停时让出音频焦点
@@ -1277,7 +1406,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (this.volume.value != volume) {
       this.volume.value = volume;
       try {
-        if (PlatformUtils.isDesktop) {
+        if (Platform.isOhos) {
+          await _ohosVideoPlayerController?.setVolume(volume);
+        } else if (PlatformUtils.isDesktop) {
           await setVolumeCapped(_videoPlayerController, volume);
         } else {
           FlutterVolumeController.updateShowSystemUI(false);
@@ -1365,16 +1496,20 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
   }
 
-  bool get isCompleted =>
-      videoPlayerController!.state.completed ||
-      durationInMilliseconds - positionInMilliseconds <= 50;
+  bool get isCompleted => Platform.isOhos
+      ? (_ohosVideoPlayerController?.value.isCompleted == true ||
+            durationInMilliseconds - positionInMilliseconds <= 50)
+      : (videoPlayerController!.state.completed ||
+            durationInMilliseconds - positionInMilliseconds <= 50);
 
   // 双击播放、暂停
   Future<void> onDoubleTapCenter() async {
     if (!isLive && isCompleted) {
-      await videoPlayerController!.seek(Duration.zero);
-      await videoPlayerController!.play();
-    } else if (videoPlayerController!.state.playing) {
+      await seekTo(Duration.zero);
+      await play(hideControls: false);
+    } else if (Platform.isOhos
+        ? (_ohosVideoPlayerController?.value.isPlaying == true)
+        : videoPlayerController!.state.playing) {
       await pause();
     } else {
       await play(hideControls: false);
@@ -1393,11 +1528,21 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void onForward(Duration duration) {
-    onForwardBackward(videoPlayerController!.state.position + duration);
+    onForwardBackward(
+      (Platform.isOhos
+              ? _ohosVideoPlayerPlayerPosition
+              : videoPlayerController!.state.position) +
+          duration,
+    );
   }
 
   void onBackward(Duration duration) {
-    onForwardBackward(videoPlayerController!.state.position - duration);
+    onForwardBackward(
+      (Platform.isOhos
+              ? _ohosVideoPlayerPlayerPosition
+              : videoPlayerController!.state.position) -
+          duration,
+    );
   }
 
   void multiBackwardStart([_]) {
@@ -1416,7 +1561,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   void onForwardBackward(Duration duration) {
     seekTo(
-      duration.clamp(Duration.zero, videoPlayerController!.state.duration),
+      duration.clamp(
+        Duration.zero,
+        Platform.isOhos
+            ? (_ohosVideoPlayerController?.value.duration ?? Duration.zero)
+            : videoPlayerController!.state.duration,
+      ),
     ).whenComplete(play);
   }
 
@@ -1627,7 +1777,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   bool get isCloseAll => _isCloseAll;
 
   Future<void>? resetScreenRotation() {
-    if (horizontalScreen) {
+    if (Platform.isOhos || horizontalScreen) {
       return fullMode();
     } else {
       return portraitUpMode();
@@ -1697,6 +1847,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
     _videoController = null;
+    _ohosVideoPlayerController?.dispose();
+    _ohosVideoPlayerController = null;
     _instance = null;
     videoPlayerServiceHandler?.clear();
   }

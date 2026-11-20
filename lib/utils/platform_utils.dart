@@ -2,7 +2,8 @@ import 'dart:io' show Platform;
 
 abstract final class PlatformUtils {
   @pragma("vm:platform-const")
-  static final bool isMobile = Platform.isAndroid || Platform.isIOS;
+  static final bool isMobile =
+      Platform.isAndroid || Platform.isIOS || Platform.isOhos;
 
   @pragma("vm:platform-const")
   static final bool isDesktop =

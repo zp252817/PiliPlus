@@ -753,6 +753,7 @@ abstract final class Pref {
 
   static bool get dynamicColor =>
       !Platform.isIOS &&
+      !Platform.isOhos &&
       _setting.get(SettingBoxKey.dynamicColor, defaultValue: true);
 
   static bool get enableSystemProxy =>

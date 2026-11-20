@@ -1913,6 +1913,7 @@ class RenderEditable extends RenderBox
           caretRect.height,
         );
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
@@ -2392,6 +2393,7 @@ class RenderEditable extends RenderBox
             extentOffset: position.offset,
           );
         case TargetPlatform.android:
+        case TargetPlatform.ohos:
           if (readOnly) {
             if (previousWord == null) {
               return TextSelection(
@@ -2479,6 +2481,7 @@ class RenderEditable extends RenderBox
           cursorHeight + 2,
         );
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:

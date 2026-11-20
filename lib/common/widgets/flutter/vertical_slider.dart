@@ -800,6 +800,7 @@ class _VerticalSliderState extends State<VerticalSlider>
           final ThemeData theme = Theme.of(context);
           switch (theme.platform) {
             case TargetPlatform.android:
+            case TargetPlatform.ohos:
             case TargetPlatform.fuchsia:
             case TargetPlatform.linux:
             case TargetPlatform.windows:
@@ -964,6 +965,7 @@ class _VerticalSliderState extends State<VerticalSlider>
     VoidCallback? handleDidGainAccessibilityFocus;
     switch (theme.platform) {
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.iOS:
       case TargetPlatform.linux:
@@ -1550,6 +1552,7 @@ class _RenderSlider extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
         // Matches iOS implementation of material slider.
         return 0.1;
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:

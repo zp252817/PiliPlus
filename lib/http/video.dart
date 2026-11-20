@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
@@ -259,7 +260,10 @@ abstract final class VideoHttp {
       'cid': cid,
       'qn': qn,
       // 获取所有格式的视频
-      'fnval': 4048,
+      // HarmonyOS AVPlayer accepts a single muxed MP4 stream. Request the
+      // legacy durl response there instead of DASH's separate audio/video
+      // streams used by the mpv backend.
+      'fnval': Platform.isOhos ? 0 : 4048,
       'fourk': 1,
       'fnver': 0,
       'voice_balance': voiceBalance ? 1 : 0,

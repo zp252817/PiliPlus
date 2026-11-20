@@ -1,7 +1,8 @@
-import 'dart:io' show Directory, File;
+import 'dart:io' show Directory, File, Platform;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:path/path.dart' as path;
@@ -9,16 +10,22 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 Future<Directory> _cacheDirectoryProvider() async {
-  final tmpDirPath = await PathProviderPlatform.instance.getTemporaryPath();
-  if (tmpDirPath == null) {
+  if (Platform.isOhos) {
+    final directory = Directory(tmpDirPath);
+    await directory.create(recursive: true);
+    return directory;
+  }
+  final platformTempPath = await PathProviderPlatform.instance
+      .getTemporaryPath();
+  if (platformTempPath == null) {
     throw MissingPlatformDirectoryException(
       'Unable to get temporary directory',
     );
   }
   if (PlatformUtils.isDesktop) {
-    return Directory(path.join(tmpDirPath, Constants.appName));
+    return Directory(path.join(platformTempPath, Constants.appName));
   }
-  return Directory(tmpDirPath);
+  return Directory(platformTempPath);
 }
 
 abstract final class CacheManager {
@@ -37,7 +44,9 @@ abstract final class CacheManager {
         return manager.getTotalLength();
       }
 
-      final Directory tempDirectory = await getTemporaryDirectory();
+      final Directory tempDirectory = Platform.isOhos
+          ? Directory(tmpDirPath)
+          : await getTemporaryDirectory();
       if (tempDirectory.existsSync()) {
         return await getTotalSizeOfFilesInDir(tempDirectory);
       }
@@ -74,7 +83,9 @@ abstract final class CacheManager {
       await manager.emptyCache();
       if (PlatformUtils.isDesktop) return;
 
-      final tempDirectory = await getTemporaryDirectory();
+      final tempDirectory = Platform.isOhos
+          ? Directory(tmpDirPath)
+          : await getTemporaryDirectory();
       if (tempDirectory.existsSync()) {
         await for (final file in tempDirectory.list(recursive: false)) {
           if (file is Directory && path.equals(file.path, manager.cacheDir)) {

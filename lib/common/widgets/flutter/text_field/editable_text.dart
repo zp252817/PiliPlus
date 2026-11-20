@@ -1742,7 +1742,7 @@ class EditableText extends StatefulWidget {
       return true;
     }
     return switch (defaultTargetPlatform) {
-      TargetPlatform.android => false,
+      TargetPlatform.android || TargetPlatform.ohos => false,
       TargetPlatform.iOS => false,
       TargetPlatform.fuchsia => false,
       TargetPlatform.linux => true,
@@ -1871,6 +1871,7 @@ class EditableText extends StatefulWidget {
         }
       case TargetPlatform.macOS:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
@@ -1947,6 +1948,7 @@ class EditableText extends StatefulWidget {
             return keyboardType;
           }
         case TargetPlatform.android:
+        case TargetPlatform.ohos:
         case TargetPlatform.fuchsia:
         case TargetPlatform.linux:
         case TargetPlatform.windows:
@@ -2426,6 +2428,7 @@ class EditableTextState extends State<EditableText>
         return textEditingValue.text.isNotEmpty &&
             textEditingValue.selection.isCollapsed;
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
@@ -2462,6 +2465,7 @@ class EditableTextState extends State<EditableText>
   bool get shareEnabled {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.iOS:
         return !widget.obscureText &&
             !textEditingValue.selection.isCollapsed &&
@@ -2530,6 +2534,7 @@ class EditableTextState extends State<EditableText>
         case TargetPlatform.windows:
           break;
         case TargetPlatform.android:
+        case TargetPlatform.ohos:
         case TargetPlatform.fuchsia:
           // Collapse the selection and hide the toolbar and handles.
           userUpdateTextEditingValue(
@@ -2691,6 +2696,7 @@ class EditableTextState extends State<EditableText>
     if (cause == SelectionChangedCause.toolbar) {
       switch (defaultTargetPlatform) {
         case TargetPlatform.android:
+        case TargetPlatform.ohos:
         case TargetPlatform.iOS:
         case TargetPlatform.fuchsia:
           break;
@@ -2701,6 +2707,7 @@ class EditableTextState extends State<EditableText>
       }
       switch (defaultTargetPlatform) {
         case TargetPlatform.android:
+        case TargetPlatform.ohos:
         case TargetPlatform.fuchsia:
         case TargetPlatform.linux:
         case TargetPlatform.windows:
@@ -4243,7 +4250,7 @@ class EditableTextState extends State<EditableText>
   }
 
   final bool _platformSupportsFadeOnScroll = switch (defaultTargetPlatform) {
-    TargetPlatform.android || TargetPlatform.iOS => true,
+    TargetPlatform.android || TargetPlatform.ohos || TargetPlatform.iOS => true,
     TargetPlatform.fuchsia ||
     TargetPlatform.linux ||
     TargetPlatform.macOS ||
@@ -4824,6 +4831,7 @@ class EditableTextState extends State<EditableText>
       case TargetPlatform.windows:
       case TargetPlatform.fuchsia:
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
         if (cause == SelectionChangedCause.drag) {
           if (oldSelection.baseOffset != newSelection.baseOffset) {
             bringIntoView(newSelection.base);
@@ -7134,6 +7142,7 @@ class _EditableTextTapOutsideAction
     // The focus dropping behavior is only present on desktop platforms.
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
+      case TargetPlatform.ohos:
       case TargetPlatform.iOS:
       case TargetPlatform.fuchsia:
         // On mobile platforms, we don't unfocus on touch events unless they're
