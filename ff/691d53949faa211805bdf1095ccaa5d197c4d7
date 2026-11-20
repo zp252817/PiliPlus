@@ -1,0 +1,104 @@
+lib/common/widgets/flutter/text_field/cupertino/text_field.dart
+  h_de7783387f53e1 1160,1325,1335,1555
+lib/common/widgets/flutter/text_field/editable.dart
+  h_de7783387f53e1 1916,2396,2484
+lib/common/widgets/flutter/text_field/editable_text.dart
+  h_de7783387f53e1 1745,1874,1951,2431,2468,2537,2699,2710,4253,4834,7145
+lib/common/widgets/flutter/text_field/text_field.dart
+  h_de7783387f53e1 955,1528,1538,1682,1756
+lib/common/widgets/flutter/text_field/text_selection.dart
+  h_de7783387f53e1 103,121,375,524,687,753,819,1001,1062,1085,1186,1250,1559,1702,2358,2504,3015
+lib/common/widgets/flutter/vertical_slider.dart
+  h_de7783387f53e1 803,968,1555
+lib/http/video.dart
+  h_de7783387f53e1 2,263-266
+lib/main.dart
+  h_de7783387f53e1 87-91,96-100,106-108,132-136,182,191
+lib/pages/video/controller.dart
+  h_de7783387f53e1 930-932,937-939
+lib/pages/video/view.dart
+  h_de7783387f53e1 1219
+lib/plugin/pl_player/controller.dart
+  h_de7783387f53e1 3,71,80,97-99,181-190,645-649,652-657,771-775,784-788,798-801,840,993-1059,1064-1068,1081-1086,1125-1127,1132,1303-1307,1318-1324,1349-1353,1362-1366,1409-1411,1499-1503,1508-1512,1531-1536,1540-1545,1564-1569,1780,1850-1851
+lib/plugin/pl_player/ohos_video.dart
+  h_de7783387f53e1 1-40
+lib/plugin/pl_player/view/view.dart
+  h_de7783387f53e1 45,126,268-270,345-348,1350,1356,2033-2034,2038-2055
+lib/plugin/pl_player/widgets/play_pause_btn.dart
+  h_de7783387f53e1 2,7,24-26,31-32,35-37,40-59,64-65,72-74,83
+lib/utils/app_scheme.dart
+  h_de7783387f53e1 3,46
+lib/utils/cache_manager.dart
+  h_de7783387f53e1 1,5,13-20,26,28,47-49,86-88
+lib/utils/login_utils.dart
+  h_de7783387f53e1 23
+lib/utils/platform_utils.dart
+  h_de7783387f53e1 5-6
+lib/utils/storage_pref.dart
+  h_de7783387f53e1 756
+ohos/.gitignore
+  h_de7783387f53e1 1-22
+ohos/.npmrc
+  h_de7783387f53e1 1-2
+ohos/AppScope/app.json5
+  h_de7783387f53e1 1-10
+ohos/AppScope/resources/base/element/string.json
+  h_de7783387f53e1 1-8
+ohos/build-profile.example.json5
+  h_de7783387f53e1 1-44
+ohos/entry/.gitignore
+  h_de7783387f53e1 1-7
+ohos/entry/build-profile.json5
+  h_de7783387f53e1 1-15
+ohos/entry/hvigorfile.ts
+  h_de7783387f53e1 1-7
+ohos/entry/oh-package.json5
+  h_de7783387f53e1 1-11
+ohos/entry/src/main/ets/entryability/EntryAbility.ets
+  h_de7783387f53e1 1-15
+ohos/entry/src/main/ets/orientation/OhosOrientationPlugin.ets
+  h_de7783387f53e1 1-190
+ohos/entry/src/main/ets/pages/Index.ets
+  h_de7783387f53e1 1-24
+ohos/entry/src/main/module.json5
+  h_de7783387f53e1 1-41
+ohos/entry/src/main/resources/base/element/color.json
+  h_de7783387f53e1 1-8
+ohos/entry/src/main/resources/base/element/string.json
+  h_de7783387f53e1 1-16
+ohos/entry/src/main/resources/base/profile/main_pages.json
+  h_de7783387f53e1 1-5
+ohos/entry/src/main/resources/en_US/element/string.json
+  h_de7783387f53e1 1-16
+ohos/entry/src/main/resources/zh_CN/element/string.json
+  h_de7783387f53e1 1-16
+ohos/entry/src/ohosTest/module.json5
+  h_de7783387f53e1 1-37
+ohos/entry/src/ohosTest/resources/base/element/color.json
+  h_de7783387f53e1 1-8
+ohos/entry/src/ohosTest/resources/base/element/string.json
+  h_de7783387f53e1 1-16
+ohos/hvigor/hvigor-config.json5
+  h_de7783387f53e1 1-6
+ohos/hvigorconfig.ts
+  h_de7783387f53e1 1-4
+ohos/hvigorfile.ts
+  h_de7783387f53e1 1-8
+ohos/oh-package.json5
+  h_de7783387f53e1 1-13
+pubspec.lock
+  h_de7783387f53e1 1896-1943,2083
+pubspec.yaml
+  h_de7783387f53e1 24,140-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "5.30.1",
+  "base_commit_sha": "ff691d53949faa211805bdf1095ccaa5d197c4d7",
+  "prompts": {},
+  "humans": {
+    "h_de7783387f53e1": {
+      "author": "zpvivo50 <zhangpan128@huawei.com>"
+    }
+  }
+}
